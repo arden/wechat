@@ -1,6 +1,7 @@
 package mch
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -12,7 +13,7 @@ import (
 type WXMch struct {
 	AppID     string
 	MchID     string
-	AppKey    string
+	ApiKey    string
 	Client    *utils.HTTPClient
 	SSLClient *utils.HTTPClient
 }
@@ -41,6 +42,22 @@ func (wx *WXMch) Pappay(options ...utils.HTTPRequestOption) *Pappay {
 	}
 }
 
+// Transfer returns new transfer
+func (wx *WXMch) Transfer(options ...utils.HTTPRequestOption) *Transfer {
+	return &Transfer{
+		mch:     wx,
+		options: options,
+	}
+}
+
+// Redpack returns new redpack
+func (wx *WXMch) Redpack(options ...utils.HTTPRequestOption) *Redpack {
+	return &Redpack{
+		mch:     wx,
+		options: options,
+	}
+}
+
 // APPAPI 用于APP拉起支付
 func (wx *WXMch) APPAPI(prepayID string) utils.WXML {
 	ch := utils.WXML{
@@ -52,7 +69,7 @@ func (wx *WXMch) APPAPI(prepayID string) utils.WXML {
 		"timestamp": strconv.FormatInt(time.Now().Unix(), 10),
 	}
 
-	ch["sign"] = SignWithMD5(ch, wx.AppKey)
+	ch["sign"] = SignWithMD5(ch, wx.ApiKey)
 
 	return ch
 }
@@ -67,7 +84,7 @@ func (wx *WXMch) JSAPI(prepayID string) utils.WXML {
 		"timeStamp": strconv.FormatInt(time.Now().Unix(), 10),
 	}
 
-	ch["paySign"] = SignWithMD5(ch, wx.AppKey)
+	ch["paySign"] = SignWithMD5(ch, wx.ApiKey)
 
 	return ch
 }
@@ -85,9 +102,9 @@ func (wx *WXMch) VerifyWXReply(reply utils.WXML) error {
 
 		switch signType {
 		case SignMD5:
-			signature = SignWithMD5(reply, wx.AppKey)
+			signature = SignWithMD5(reply, wx.ApiKey)
 		case SignHMacSHA256:
-			signature = SignWithHMacSHA256(reply, wx.AppKey)
+			signature = SignWithHMacSHA256(reply, wx.ApiKey)
 		default:
 			return fmt.Errorf("invalid sign type: %s", signType)
 		}
@@ -110,4 +127,37 @@ func (wx *WXMch) VerifyWXReply(reply utils.WXML) error {
 	}
 
 	return nil
+}
+
+// RSAPublicKey 获取RSA加密公钥
+func (wx *WXMch) RSAPublicKey(options ...utils.HTTPRequestOption) ([]byte, error) {
+	body := utils.WXML{
+		"mch_id":    wx.MchID,
+		"nonce_str": utils.NonceStr(),
+		"sign_type": SignMD5,
+	}
+
+	body["sign"] = SignWithMD5(body, wx.ApiKey)
+
+	resp, err := wx.SSLClient.PostXML(TransferBalanceOrderQueryURL, body, options...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp["return_code"] != ResultSuccess {
+		return nil, errors.New(resp["return_msg"])
+	}
+
+	if err := wx.VerifyWXReply(resp); err != nil {
+		return nil, err
+	}
+
+	pubKey, ok := resp["pub_key"]
+
+	if !ok {
+		return nil, errors.New("empty pub_key")
+	}
+
+	return []byte(pubKey), nil
 }

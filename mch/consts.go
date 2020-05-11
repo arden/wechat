@@ -20,6 +20,7 @@ const (
 	ResultSuccess = "SUCCESS"
 	ResultFail    = "FAIL"
 	ResultNull    = "RESULT NULL" // 查询结果为空
+	SystemError   = "SYSTEMERROR" // 系统繁忙，请稍后再试
 )
 
 const (
@@ -66,14 +67,22 @@ const (
 )
 
 const (
-	PappayErrAccount             = "ACCOUNTERROR"          // 用户帐号注销、银行卡异常或注销
-	PappaytErrContractNotExist   = "CONTRACT_NOT_EXIST"    // 用户签约协议已过期或已解约
-	PappayErrRuleLimit           = "RULELIMIT"             // 用户支付银行卡限额不足
-	PappayErrBank                = "BANKERROR"             // 用户支付银行暂时无法提供服务
-	PappayErrNotEnough           = "NOTENOUGH"             // 用户余额不足
-	PappayErrUserAccountAbnormal = "USER_ACCOUNT_ABNORMAL" // 扣款用户的微信账号异常导致
-	PappayErrUserNotExist        = "USER_NOT_EXIST"        // 扣款用户的微信账号已注销
+	TransferNoCheck    = "NO_CHECK"    // 不校验真实姓名
+	TransferForceCheck = "FORCE_CHECK" // 强校验真实姓名
 )
+
+const (
+	RedpackScene1 = "PRODUCT_1" // 商品促销
+	RedpackScene2 = "PRODUCT_2" // 抽奖
+	RedpackScene3 = "PRODUCT_3" // 虚拟物品兑奖
+	RedpackScene4 = "PRODUCT_4" // 企业内部福利
+	RedpackScene5 = "PRODUCT_5" // 渠道分润
+	RedpackScene6 = "PRODUCT_6" // 保险回馈
+	RedpackScene7 = "PRODUCT_7" // 彩票派奖
+	RedpackScene8 = "PRODUCT_8" // 税务刮奖
+)
+
+const RSAPublicKeyURL = "https://fraud.mch.weixin.qq.com/risk/getpublickey"
 
 // URL - order
 const (
@@ -98,4 +107,21 @@ const (
 	PappayContractDeleteURL = "https://api.mch.weixin.qq.com/papay/deletecontract" // 申请解约
 	PappayPayApplyURL       = "https://api.mch.weixin.qq.com/pay/pappayapply"      // 申请扣款
 	PappayOrderQueryURL     = "https://api.mch.weixin.qq.com/pay/paporderquery"    // 扣款查询
+)
+
+// URL - transfer
+const (
+	TransferToBalanceURL          = "https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers" // 企业付款到零钱
+	TransferBalanceOrderQueryURL  = "https://api.mch.weixin.qq.com/mmpaymkttransfers/gettransferinfo"     // 企业付款到零钱订单查询
+	TransferToBankCardURL         = "https://api.mch.weixin.qq.com/mmpaysptrans/pay_bank"                 // 企业付款到银行卡
+	TransferBankCardOrderQueryURL = "https://api.mch.weixin.qq.com/mmpaysptrans/query_bank"               // 企业付款到银行卡订单查询
+)
+
+// URL - redpack
+
+const (
+	RedpackNormalURL = "https://api.mch.weixin.qq.com/mmpaymkttransfers/sendredpack"
+	RedpackGroupURL  = "https://api.mch.weixin.qq.com/mmpaymkttransfers/sendgroupredpack"
+	RedpackMinipURL  = "https://api.mch.weixin.qq.com/mmpaymkttransfers/sendminiprogramhb"
+	RedpackQueryURL  = "https://api.mch.weixin.qq.com/mmpaymkttransfers/gethbinfo"
 )
